@@ -1,7 +1,19 @@
 // 游戏常量
 const GRID_SIZE = 20;
 const TILE_COUNT = 20; // 400x400 canvas / 20px grid
-const GAME_SPEED = 100; // ms per update
+let GAME_SPEED = 100; // ms per update
+const BASE_SPEED = 100;
+
+// 道具常量
+const POWERUP_TYPES = ['ghost', 'speed', 'magnet', 'time'];
+const POWERUP_ICONS = { 
+    ghost: '👻', 
+    speed: '⚡', 
+    magnet: '🧲', 
+    time: '⏱️' 
+};
+const POWERUP_DURATION = 10000; // 10s
+const ITEM_LIFETIME = 10000; // 10s
 
 // 游戏状态
 let gameLoop;
@@ -9,6 +21,11 @@ let isPaused = false;
 let isGameOver = false;
 let score = 0;
 let highScore = localStorage.getItem('snakeHighScore') || 0;
+let foodsEaten = 0; // 记录吃掉的食物数量，用于生成道具
+
+// 道具状态
+let activePowerUp = { type: null, endTime: 0 };
+let powerUpItem = { x: -1, y: -1, type: null, spawnTime: 0 };
 
 // 视觉效果状态
 let particles = [];
@@ -61,9 +78,103 @@ function update() {
 
     moveSnake();
     checkCollisions();
+    updatePowerUps();
     updateParticles();
     updateFood();
     draw();
+}
+
+function updatePowerUps() {
+    const now = Date.now();
+
+    // 1. 检查道具生成
+    if (powerUpItem.type === null && activePowerUp.type === null) {
+        // 条件：每吃掉3个食物，20%概率生成
+        // 这个逻辑在 handleEatFood 里触发生成更合适，这里只负责清理过期道具
+    }
+
+    // 2. 检查道具是否过期消失
+    if (powerUpItem.type !== null) {
+        if (now - powerUpItem.spawnTime > ITEM_LIFETIME) {
+            powerUpItem = { x: -1, y: -1, type: null, spawnTime: 0 };
+        }
+    }
+
+    // 3. 检查激活的道具效果是否结束
+    if (activePowerUp.type !== null) {
+        if (now >= activePowerUp.endTime) {
+            deactivatePowerUp();
+        } else {
+            // 持续性效果处理
+            applyActivePowerUpEffect();
+        }
+    }
+}
+
+function applyActivePowerUpEffect() {
+    const type = activePowerUp.type;
+    
+    // 🧲 磁力效果：食物向蛇头移动
+    if (type === 'magnet') {
+        const head = snake[0];
+        const dx = head.x - food.x;
+        const dy = head.y - food.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        
+        if (dist < 5 && dist > 0) { // 5格范围内吸附
+             // 每隔几帧移动一次，避免太快
+             if (Math.random() < 0.3) {
+                 if (Math.abs(dx) > Math.abs(dy)) {
+                     food.x += Math.sign(dx);
+                 } else {
+                     food.y += Math.sign(dy);
+                 }
+             }
+        }
+    }
+}
+
+function deactivatePowerUp() {
+    const type = activePowerUp.type;
+    activePowerUp = { type: null, endTime: 0 };
+    
+    // 恢复状态
+    if (type === 'speed') {
+        GAME_SPEED = BASE_SPEED;
+        restartGameLoop();
+    } else if (type === 'time') {
+        GAME_SPEED = BASE_SPEED;
+        restartGameLoop();
+    }
+    // ghost 和 magnet 不需要特殊的恢复逻辑，状态改变即可
+}
+
+function activatePowerUp(type) {
+    activePowerUp = {
+        type: type,
+        endTime: Date.now() + POWERUP_DURATION
+    };
+    
+    if (type === 'speed') {
+        GAME_SPEED = BASE_SPEED / 2; // 2倍速 (间隔减半)
+        restartGameLoop();
+    } else if (type === 'time') {
+        GAME_SPEED = BASE_SPEED * 1.5; // 0.66倍速 (慢动作)
+        restartGameLoop();
+    }
+    
+    // 视觉提示
+    createExplosion(
+        snake[0].x * GRID_SIZE + GRID_SIZE/2, 
+        snake[0].y * GRID_SIZE + GRID_SIZE/2, 
+        '#00ffff', 
+        20
+    );
+}
+
+function restartGameLoop() {
+    if (gameLoop) clearInterval(gameLoop);
+    gameLoop = setInterval(update, GAME_SPEED);
 }
 
 // 粒子系统
@@ -128,6 +239,13 @@ function moveSnake() {
 
     const head = {x: snake[0].x + velocity.x, y: snake[0].y + velocity.y};
     
+    // 检查是否吃道具
+    if (powerUpItem.type !== null) {
+        if (head.x === powerUpItem.x && head.y === powerUpItem.y) {
+            handleEatPowerUp();
+        }
+    }
+    
     snake.unshift(head); // 添加新头部
 
     // 检查是否吃到食物
@@ -136,6 +254,24 @@ function moveSnake() {
     } else {
         snake.pop(); // 移除尾部，保持长度
     }
+}
+
+function handleEatPowerUp() {
+    if (powerUpItem.type === null) return;
+    
+    // 激活道具
+    activatePowerUp(powerUpItem.type);
+    
+    // 粒子效果
+    const pixelX = powerUpItem.x * GRID_SIZE + GRID_SIZE / 2;
+    const pixelY = powerUpItem.y * GRID_SIZE + GRID_SIZE / 2;
+    createExplosion(pixelX, pixelY, '#00ffff', 20);
+    
+    // 清除道具
+    powerUpItem = { x: -1, y: -1, type: null, spawnTime: 0 };
+    
+    // 提示信息 (可以加到UI)
+    console.log(`PowerUp Activated: ${activePowerUp.type}`);
 }
 
 function handleEatFood() {
@@ -164,6 +300,39 @@ function handleEatFood() {
 
     scoreEl.textContent = score;
     spawnFood();
+    
+    // 生成道具逻辑
+    foodsEaten++;
+    if (foodsEaten % 3 === 0) { // 每吃3个食物
+        if (Math.random() < 0.2) { // 20% 概率
+            spawnPowerUp();
+        }
+    }
+}
+
+function spawnPowerUp() {
+    // 随机选择类型
+    const type = POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)];
+    
+    // 随机位置
+    let valid = false;
+    let x, y;
+    while (!valid) {
+        x = Math.floor(Math.random() * TILE_COUNT);
+        y = Math.floor(Math.random() * TILE_COUNT);
+        
+        // 不要在蛇身上，也不要在食物上
+        valid = !snake.some(s => s.x === x && s.y === y) && (x !== food.x || y !== food.y);
+    }
+    
+    powerUpItem = {
+        x, y,
+        type,
+        spawnTime: Date.now()
+    };
+    
+    // 提示音效（这里用文字代替）
+    console.log(`PowerUp Spawned: ${type} at ${x},${y}`);
 }
 
 function updateFood() {
@@ -203,6 +372,19 @@ function spawnFood() {
 // 碰撞检测
 function checkCollisions() {
     const head = snake[0];
+
+    // 幽灵模式：穿墙和穿自己
+    if (activePowerUp.type === 'ghost') {
+        // 穿墙处理：从对面出来
+        if (head.x < 0) head.x = TILE_COUNT - 1;
+        else if (head.x >= TILE_COUNT) head.x = 0;
+        
+        if (head.y < 0) head.y = TILE_COUNT - 1;
+        else if (head.y >= TILE_COUNT) head.y = 0;
+        
+        // 幽灵模式不检测自身碰撞
+        return;
+    }
 
     // 撞墙检测
     if (head.x < 0 || head.x >= TILE_COUNT || head.y < 0 || head.y >= TILE_COUNT) {
@@ -266,6 +448,12 @@ function resetGame() {
     nextVelocity = {x: 1, y: 0};
     particles = [];
     shakeDuration = 0;
+    
+    // 重置道具
+    foodsEaten = 0;
+    activePowerUp = { type: null, endTime: 0 };
+    powerUpItem = { x: -1, y: -1, type: null, spawnTime: 0 };
+    GAME_SPEED = BASE_SPEED;
     
     gameOverModal.classList.add('hidden');
     spawnFood();
@@ -358,9 +546,30 @@ function draw() {
         0, Math.PI * 2
     );
     ctx.fill();
+
+    // 绘制道具
+    if (powerUpItem.type !== null) {
+        // 闪烁效果
+        if (Math.floor(Date.now() / 300) % 2 === 0) {
+            ctx.fillStyle = '#00ffff';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(
+                POWERUP_ICONS[powerUpItem.type], 
+                powerUpItem.x * GRID_SIZE + GRID_SIZE/2, 
+                powerUpItem.y * GRID_SIZE + GRID_SIZE/2
+            );
+        }
+    }
     
     // 绘制蛇
     snake.forEach((segment, index) => {
+        // 幽灵模式下半透明
+        if (activePowerUp.type === 'ghost') {
+            ctx.globalAlpha = 0.5;
+        }
+
         // 蛇头颜色不同
         ctx.fillStyle = index === 0 ? '#2ecc71' : '#27ae60'; 
         ctx.fillRect(
@@ -378,10 +587,21 @@ function draw() {
             GRID_SIZE/2, 
             GRID_SIZE/2
         );
+
+        ctx.globalAlpha = 1.0; // 恢复透明度
     });
 
     // 绘制粒子
     particles.forEach(p => p.draw(ctx));
+
+    // 绘制激活道具UI
+    if (activePowerUp.type !== null) {
+        const timeLeft = Math.ceil((activePowerUp.endTime - Date.now()) / 1000);
+        ctx.fillStyle = 'white';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${POWERUP_ICONS[activePowerUp.type]} ${timeLeft}s`, 10, 30);
+    }
 
     if (isPaused) {
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
