@@ -1,26 +1,37 @@
 :root{
-  --bg:#070a12;
-  --panel:#0e1526;
-  --panel2:#0b1120;
-  --text:#eaf0ff;
-  --muted:#a7b4cf;
-  --line:#22304a;
-  --accent:#79ffa8;
-  --danger:#ff5c7a;
-  --warn:#ffd66e;
-  --info:#78b7ff;
-  --shadow: 0 18px 60px rgba(0,0,0,.45);
+  /* ui-ux-pro-max DS (Retro-Futurism): bg #0F0F23, primary #7C3AED, CTA #F43F5E */
+  --bg:#0F0F23;
+  --panel:#111B31;
+  --panel2:#0C1428;
+  --text:#E2E8F0;
+  --muted:#A7B4CF;
+  --line:#2A3560;
+
+  --primary:#7C3AED;
+  --primary2:#A78BFA;
+  --cta:#F43F5E;
+
+  --accent:#79FFA8;
+  --danger:#FF5C7A;
+  --warn:#FFD66E;
+  --info:#78B7FF;
+
+  --shadow: 0 22px 70px rgba(0,0,0,.50);
   --radius: 18px;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
+
+/* ui-ux-pro-max DS: Retro-Futurism + Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 body{
   margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   background:
-    radial-gradient(1000px 680px at 8% 8%, rgba(120,183,255,.18) 0%, rgba(7,10,18,0) 55%),
-    radial-gradient(980px 640px at 92% 10%, rgba(121,255,168,.14) 0%, rgba(7,10,18,0) 58%),
-    radial-gradient(900px 620px at 50% 110%, rgba(255,214,110,.10) 0%, rgba(7,10,18,0) 60%),
+    radial-gradient(980px 640px at 18% 10%, rgba(124,58,237,.22) 0%, rgba(15,15,35,0) 55%),
+    radial-gradient(920px 620px at 88% 14%, rgba(244,63,94,.14) 0%, rgba(15,15,35,0) 58%),
+    radial-gradient(900px 620px at 50% 110%, rgba(167,139,250,.10) 0%, rgba(15,15,35,0) 60%),
     linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,0));
   background-color: var(--bg);
   color:var(--text);
@@ -139,16 +150,39 @@ button.secondary{background: rgba(0,0,0,.18)}
 .hudItem .v{font-size:18px; font-weight:900; margin-top:2px}
 
 .canvasWrap{padding: 14px; display:grid; place-items:center; gap: 10px}
+
+/* Retro-futurism: subtle scanline overlay on canvases */
+.canvasWrap{position:relative}
+.canvasWrap::before{
+  content:"";
+  position:absolute;
+  width: min(420px, 92vw);
+  height: min(420px, 92vw);
+  border-radius: 16px;
+  pointer-events:none;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255,255,255,0.025) 0,
+    rgba(255,255,255,0.025) 1px,
+    rgba(0,0,0,0) 3px,
+    rgba(0,0,0,0) 6px
+  );
+  mix-blend-mode: overlay;
+  opacity: .22;
+}
+
 canvas{
   width: min(420px, 92vw);
   height: min(420px, 92vw);
   image-rendering: pixelated;
   border-radius: 16px;
-  background: rgba(0,0,0,.18);
-  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.14);
+  border: 1px solid rgba(255,255,255,.14);
   box-shadow:
-    0 18px 70px rgba(0,0,0,.38),
-    inset 0 0 0 1px rgba(255,255,255,.05);
+    0 22px 90px rgba(0,0,0,.46),
+    0 0 0 1px rgba(124,58,237,.25),
+    inset 0 0 0 1px rgba(255,255,255,.06);
+  position: relative;
 }
 .hint{font-size:12px; color: var(--muted)}
 
