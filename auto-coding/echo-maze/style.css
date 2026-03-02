@@ -1,25 +1,28 @@
 :root{
-  --bg:#0b0f17;
-  --panel:#0f1624;
-  --panel2:#0c1320;
-  --text:#e8eefc;
-  --muted:#9aa7c2;
+  --bg:#070a12;
+  --panel:#0e1526;
+  --panel2:#0b1120;
+  --text:#eaf0ff;
+  --muted:#a7b4cf;
   --line:#22304a;
   --accent:#79ffa8;
   --danger:#ff5c7a;
   --warn:#ffd66e;
   --info:#78b7ff;
-  --shadow: 0 12px 40px rgba(0,0,0,.35);
-  --radius: 16px;
+  --shadow: 0 18px 60px rgba(0,0,0,.45);
+  --radius: 18px;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  background: radial-gradient(1100px 700px at 10% 10%, #13213a 0%, var(--bg) 55%),
-              radial-gradient(900px 600px at 90% 0%, #2a1540 0%, rgba(11,15,23,.2) 55%),
-              linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,0));
+  background:
+    radial-gradient(1000px 680px at 8% 8%, rgba(120,183,255,.18) 0%, rgba(7,10,18,0) 55%),
+    radial-gradient(980px 640px at 92% 10%, rgba(121,255,168,.14) 0%, rgba(7,10,18,0) 58%),
+    radial-gradient(900px 620px at 50% 110%, rgba(255,214,110,.10) 0%, rgba(7,10,18,0) 60%),
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,0));
+  background-color: var(--bg);
   color:var(--text);
 }
 
@@ -53,9 +56,14 @@ button{
   border-radius: 12px;
   padding: 10px 12px;
   cursor:pointer;
-  transition: transform .08s ease, background .2s ease, border-color .2s ease;
+  transition: transform .08s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+  box-shadow: 0 8px 26px rgba(0,0,0,.25);
 }
-button:hover{background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.22)}
+button:hover{
+  background: rgba(255,255,255,.10);
+  border-color: rgba(255,255,255,.22);
+  box-shadow: 0 12px 34px rgba(0,0,0,.28);
+}
 button:active{transform: translateY(1px)}
 button.secondary{background: rgba(0,0,0,.18)}
 
@@ -75,8 +83,9 @@ button.secondary{background: rgba(0,0,0,.18)}
 }
 
 .panel{
-  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-  border: 1px solid rgba(255,255,255,.10);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.12);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow:hidden;
@@ -96,12 +105,13 @@ button.secondary{background: rgba(0,0,0,.18)}
   border: 1px solid rgba(255,255,255,.14);
   background: rgba(121,255,168,.10);
   color: var(--accent);
-  font-weight: 800;
-  letter-spacing:.8px;
+  font-weight: 900;
+  letter-spacing:.9px;
+  text-shadow: 0 1px 0 rgba(0,0,0,.35);
 }
-.badge.neutral{background: rgba(120,183,255,.10); color: var(--info)}
-.badge.danger{background: rgba(255,92,122,.10); color: var(--danger)}
-.badge.warn{background: rgba(255,214,110,.12); color: var(--warn)}
+.badge.neutral{background: rgba(120,183,255,.12); color: var(--info)}
+.badge.danger{background: rgba(255,92,122,.12); color: var(--danger)}
+.badge.warn{background: rgba(255,214,110,.14); color: var(--warn)}
 
 .hud{
   display:grid;
@@ -126,9 +136,12 @@ canvas{
   width: min(420px, 92vw);
   height: min(420px, 92vw);
   image-rendering: pixelated;
-  border-radius: 14px;
-  background: rgba(0,0,0,.20);
-  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow:
+    0 18px 70px rgba(0,0,0,.38),
+    inset 0 0 0 1px rgba(255,255,255,.05);
 }
 .hint{font-size:12px; color: var(--muted)}
 
