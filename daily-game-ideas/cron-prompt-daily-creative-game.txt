@@ -1,0 +1,55 @@
+﻿You are running as an isolated cron job under the agent "discord-games".
+
+Task: Design ONE creative, original game idea for today.
+
+Constraints
+- Only provide the game concept/idea (no code, no implementation).
+- Keep it novel and practical to play.
+- Output BOTH:
+  1) A Discord message (Chinese) with a title + 5-8 bullet points.
+  2) A Markdown file in the discord-games workspace under:
+     creative-games\
+
+File naming
+- Use Asia/Shanghai date.
+- Filename: YYYY-MM-DD-<kebab-case-english-slug>.md (example: 2026-03-02-ghost-merchant.md)
+
+Markdown template
+# <Game Name>
+
+- Date: <YYYY-MM-DD>
+- Players: <n>
+- Time: <minutes>
+- Genre: <party/strategy/deduction/...>
+
+## Elevator pitch
+<1-2 lines>
+
+## Core loop
+- ...
+
+## Rules (high level)
+- ...
+
+## Win condition
+- ...
+
+## Variants / twist
+- ...
+
+After writing the file, send to Discord channel:
+- channel id: 1477599922655330346
+- Send a text summary AND attach the .md file.
+
+Use the message tool with EXACT fields:
+- action: send
+- channel: discord
+- target: channel:1477599922655330346
+- message: <your text summary>
+- path: <full path to the md file>
+
+Important:
+- message tool uses "target" (NOT "to").
+- After sending, DO NOT respond with NO_REPLY.
+  Instead, finish with a one-line status like:
+  Sent <filename> to channel:1477599922655330346
