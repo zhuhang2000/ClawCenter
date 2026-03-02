@@ -44,6 +44,9 @@ const ui = {
 const ctxRunner = ui.runnerCanvas.getContext('2d');
 const ctxEcho = ui.echoCanvas.getContext('2d');
 
+// Expose for debugging in console
+window.__echoMaze = { ui, ctxRunner, ctxEcho };
+
 function now() { return performance.now(); }
 function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 function fmtS(ms) { return (ms / 1000).toFixed(1) + 's'; }
@@ -155,6 +158,7 @@ function resetGame(newMaze=false){
     state.debugAssist = prevAssist;
   }
   state.debugAssist = prevAssist;
+  window.__echoMaze.state = state;
   ui.chkAssist.checked = state.debugAssist;
 
   ui.runnerInbox.innerHTML = '';
@@ -479,6 +483,8 @@ function guideKeyToText(k){
 function sendGuideKey(k){
   const text = guideKeyToText(k);
   if(!text) return;
+  // also reflect into input box so user sees what's being sent
+  ui.echoInput.value = text;
   addOutbox(text, ECHO_DELAY_MS);
 }
 
@@ -516,6 +522,7 @@ window.addEventListener('keydown', (e) => {
 
 // Boot
 state = freshState();
+window.__echoMaze.state = state;
 ui.chkAssist.checked = state.debugAssist;
 renderAll();
 requestAnimationFrame(tick);
