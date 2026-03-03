@@ -39,6 +39,28 @@
         <div class="hudItem"><div class="k">眩晕</div><div class="v" id="stun">0.0s</div></div>
       </div>
 
+      <!-- 音乐控制面板 -->
+      <div class="music-controls">
+        <div class="music-header">
+          <span class="music-label">🎵 背景音乐</span>
+          <span class="music-mode" id="musicModeBadge">赛博朋克风格</span>
+        </div>
+        <div class="music-buttons">
+          <button id="btnMusicToggle" class="music-btn" title="播放/暂停">
+            <span id="musicIcon">▶️</span>
+          </button>
+          <button id="btnMusicMute" class="music-btn secondary" title="静音">
+            <span id="muteIcon">🔊</span>
+          </button>
+        </div>
+        <div class="volume-control">
+          <span class="volume-icon">🔉</span>
+          <input type="range" id="volumeSlider" min="0" max="100" value="50" class="volume-slider">
+          <span id="volumeValue" class="volume-value">50%</span>
+        </div>
+        <div class="music-status" id="musicStatus">🎵 点击播放沉浸音景</div>
+      </div>
+
       <div class="canvasWrap">
         <canvas id="gameCanvas" width="520" height="520"></canvas>
 
@@ -56,6 +78,7 @@
     <div class="muted">胜利条件：60 秒内、60 步内到达出口。黑暗期撞墙会眩晕。</div>
   </footer>
 
+  <script defer src="music.js"></script>
   <script defer src="memory-game.js"></script>
 </body>
 </html>

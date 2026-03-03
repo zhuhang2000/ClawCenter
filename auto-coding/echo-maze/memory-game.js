@@ -381,6 +381,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
+  // 初始化音乐系统（如果可用）
+  if (typeof MusicSystem !== 'undefined') {
+    MusicSystem.init();
+    
+    // 监听视野模式变化，自动切换音乐风格
+    const originalUpdateCanvasWrapClass = updateCanvasWrapClass;
+    updateCanvasWrapClass = function() {
+      originalUpdateCanvasWrapClass();
+      
+      // 同步音乐模式
+      if (state && MusicSystem.state) {
+        const newMode = state.visibility.mode === 'VISIBLE' ? 'light' : 'dark';
+        MusicSystem.setMode(newMode);
+      }
+    };
+  }
+  
   // 初始状态
   updateStatus('READY', 'neutral');
   

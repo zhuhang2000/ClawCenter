@@ -126,6 +126,17 @@ discord-games/
 
 ---
 
+## Discord Slash 命令交互规范（必须）
+
+- 任何由 Discord `/` 命令触发的工作流，如果可能超过 1 秒，必须在 **3 秒内 ACK**：
+  - 优先：`interaction.deferReply()`（推荐）
+  - 或：`interaction.reply("收到，处理中...")`
+- 耗时任务（检索/下载/生成 PPT/PDF/上传附件）必须在 ACK 之后执行。
+- 最终结果输出：
+  - 若已 defer/reply：用 `interaction.editReply()` 更新进度或发送最终结果；
+  - 或用 `interaction.followUp()` 发送最终结果（附件建议 followUp 更稳）。
+- 若任务可能超过 15 分钟：interaction 只做“已收到”，最终产物改为直接 `channel.send()` 到目标频道，避免 interaction token 过期导致 10062。
+
 ## 🎮 当前项目
 
 | 项目 | 路径 | 状态 | 最新提交 |
