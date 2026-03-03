@@ -155,24 +155,129 @@ button.secondary{background: rgba(0,0,0,.18)}
 
 .canvasWrap{padding: 14px; display:grid; place-items:center; gap: 10px}
 
-/* Retro-futurism: subtle scanline overlay on canvases */
-.canvasWrap{position:relative}
-.canvasWrap::before{
-  content:"";
-  position:absolute;
-  width: min(420px, 92vw);
-  height: min(420px, 92vw);
-  border-radius: 16px;
-  pointer-events:none;
+/* Dynamic Background System for Memory Challenge Mode */
+
+/* Base canvas wrapper with animated background */
+.canvasWrap {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Light Mode Background - Cyberpunk Tech Grid */
+.canvasWrap.light-mode::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    /* Animated gradient overlay */
+    linear-gradient(135deg, 
+      rgba(124, 58, 237, 0.3) 0%,
+      rgba(120, 183, 255, 0.2) 50%,
+      rgba(121, 255, 168, 0.1) 100%
+    ),
+    /* Tech grid pattern */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 40px,
+      rgba(124, 58, 237, 0.15) 40px,
+      rgba(124, 58, 237, 0.15) 41px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 40px,
+      rgba(120, 183, 255, 0.15) 40px,
+      rgba(120, 183, 255, 0.15) 41px
+    ),
+    /* Base gradient */
+    radial-gradient(ellipse at 30% 20%, rgba(124, 58, 237, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(121, 255, 168, 0.3) 0%, transparent 50%),
+    linear-gradient(180deg, #0a0a1a 0%, #1a0a2e 50%, #0a1a2e 100%);
+  animation: lightModePulse 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Dark Mode Background - Mysterious Abyss */
+.canvasWrap.dark-mode::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    /* Subtle purple glow in center */
+    radial-gradient(ellipse at 50% 50%, rgba(88, 28, 135, 0.3) 0%, transparent 60%),
+    /* Distant stars/particles */
+    radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(124, 58, 237, 0.4), transparent),
+    radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(2px 2px at 130px 80px, rgba(120, 183, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 160px 20px, rgba(255, 255, 255, 0.6), transparent),
+    /* Deep base gradient */
+    linear-gradient(180deg, #050508 0%, #0a0810 30%, #0d0815 70%, #080510 100%);
+  animation: darkModeBreath 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Light Mode Animations */
+@keyframes lightModePulse {
+  0%, 100% {
+    filter: brightness(1) saturate(1);
+    transform: scale(1);
+  }
+  50% {
+    filter: brightness(1.1) saturate(1.2);
+    transform: scale(1.02);
+  }
+}
+
+/* Dark Mode Animations */
+@keyframes darkModeBreath {
+  0%, 100% {
+    opacity: 0.9;
+    filter: brightness(0.9) contrast(1.1);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(1) contrast(1.2);
+  }
+}
+
+/* Canvas glow effect based on visibility mode */
+#gameCanvas {
+  transition: box-shadow 0.5s ease;
+}
+
+.canvasWrap.light-mode #gameCanvas {
+  box-shadow: 
+    0 0 60px rgba(124, 58, 237, 0.4),
+    0 0 100px rgba(120, 183, 255, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.canvasWrap.dark-mode #gameCanvas {
+  box-shadow: 
+    0 0 40px rgba(88, 28, 135, 0.3),
+    0 0 80px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Retro scanline effect overlay */
+.canvasWrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
   background: repeating-linear-gradient(
-    180deg,
-    rgba(255,255,255,0.025) 0,
-    rgba(255,255,255,0.025) 1px,
-    rgba(0,0,0,0) 3px,
-    rgba(0,0,0,0) 6px
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
   );
-  mix-blend-mode: overlay;
-  opacity: .22;
+  z-index: 10;
+  opacity: 0.5;
 }
 
 canvas{
