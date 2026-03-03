@@ -1,11 +1,10 @@
 /** Echo Maze: Memory Challenge Mode
  *  - 单人记忆挑战玩法
  *  - 3秒光明期（可见迷宫） / 2秒黑暗期（仅见玩家光点）
- *  - 60秒时间限制，60步步数限制
+ *  - 60秒时间限制，无步数限制
  */
 
 const GRID = 15;
-const MAX_STEPS = 60;
 const MAX_TIME = 60;
 const STUN_MS = 2000;
 
@@ -17,16 +16,16 @@ const VISIBILITY = {
 
 const $ = id => document.getElementById(id);
 
-// 游戏状态
-let state = null;
-
 // 迷宫方向常量
 const N=1, E=2, S=4, W=8;
 const DX = {[N]:0,[E]:1,[S]:0,[W]:-1};
 const DY = {[N]:-1,[E]:0,[S]:1,[W]:0};
 const OPP = {[N]:S,[E]:W,[S]:N,[W]:E};
 
-// 生成迷宫（递归回溯算法）
+// 游戏状态
+let state = null;
+
+// 生成迷宫
 function makeMaze(w=GRID, h=GRID) {
   const cells = Array.from({length:h}, () => Array.from({length:w}, () => N|E|S|W));
   const visited = Array.from({length:h}, () => Array.from({length:w}, () => false));
@@ -71,6 +70,7 @@ function makeMaze(w=GRID, h=GRID) {
 function initState() {
   const maze = makeMaze(GRID, GRID);
   
+  const now = performance.now();
   state = {
     maze,
     start: {x:0, y:0},
@@ -85,20 +85,20 @@ function initState() {
     debugAssist: false,
 
     visibility: {
-      mode: 'VISIBLE',  // 'VISIBLE' | 'DARK'
-      nextSwitchAt: performance.now() + VISIBILITY.VISIBLE
+      mode: 'VISIBLE',
+      nextSwitchAt: now + VISIBILITY.VISIBLE
     },
 
-    gameTime: 0,      // 已用时间（毫秒）
-    stunnedUntil: 0,  // 眩晕结束时间
+    gameTime: 0,
+    stunnedUntil: 0,
     won: false,
     lost: false,
 
-    lastTick: performance.now()
+    lastTick: now
   };
 
-  // expose for debugging
   window.__echoMaze = { state };
+  updateStatus('READY', 'neutral');
 }
 
 // 检查能否移动
@@ -114,13 +114,11 @@ function tryMove(dir) {
   
   // 检查游戏状态
   if (state.won || state.lost) return;
-  if (t < state.stunnedUntil) return; // 眩晕中
-  if (p.steps >= MAX_STEPS) return; // 步数耗尽
-  if (state.gameTime >= MAX_TIME * 1000) return; // 时间耗尽
+  if (t < state.stunnedUntil) return;
+  if (state.gameTime >= MAX_TIME * 1000) return;
   
   // 尝试移动
   if (!canMove(p.x, p.y, dir)) {
-    // 撞墙！眩晕
     state.stunnedUntil = t + STUN_MS;
     updateStatus('STUNNED', 'danger');
     return;
@@ -132,7 +130,7 @@ function tryMove(dir) {
   p.y = Math.max(0, Math.min(GRID-1, p.y + dy));
   p.steps++;
   
-  // 检查胜利条件
+  // 检查胜利
   if (p.x === state.exit.x && p.y === state.exit.y) {
     state.won = true;
     updateStatus('WIN', 'success');
@@ -143,14 +141,14 @@ function tryMove(dir) {
 function updateVisibility() {
   const t = performance.now();
   const vis = state.visibility;
-  if(state.debugAssist) {
+  
+  if (state.debugAssist) {
     vis.mode = 'VISIBLE';
     vis.nextSwitchAt = t + VISIBILITY.VISIBLE;
     return;
   }
-
+  
   if (t >= vis.nextSwitchAt) {
-    // 切换模式
     if (vis.mode === 'VISIBLE') {
       vis.mode = 'DARK';
       vis.nextSwitchAt = t + VISIBILITY.DARK;
@@ -161,20 +159,19 @@ function updateVisibility() {
   }
 }
 
-// 渲染迷宫（完整版 - 光明期）
+// 渲染迷宫完整版（光明期）
 function drawMazeFull(ctx) {
   const size = ctx.canvas.width;
   const pad = 18;
   const cell = (size - pad*2) / GRID;
   
-  // 清空画布
   ctx.fillStyle = '#0a0a1a';
   ctx.fillRect(0, 0, size, size);
   
   ctx.save();
   ctx.translate(pad, pad);
   
-  // 绘制墙壁
+  // 墙壁
   ctx.strokeStyle = '#7c3aed';
   ctx.lineWidth = 2;
   ctx.shadowColor = '#7c3aed';
@@ -195,19 +192,19 @@ function drawMazeFull(ctx) {
     }
   }
   
-  // 绘制起点
+  // 起点
   ctx.fillStyle = '#79ffa8';
   ctx.shadowColor = '#79ffa8';
   ctx.shadowBlur = 15;
   ctx.fillRect(state.start.x * cell + 4, state.start.y * cell + 4, cell - 8, cell - 8);
   
-  // 绘制出口
+  // 出口
   ctx.fillStyle = '#ffd66e';
   ctx.shadowColor = '#ffd66e';
   ctx.shadowBlur = 15;
   ctx.fillRect(state.exit.x * cell + 4, state.exit.y * cell + 4, cell - 8, cell - 8);
   
-  // 绘制玩家
+  // 玩家
   const p = state.player;
   ctx.fillStyle = '#78b7ff';
   ctx.shadowColor = '#78b7ff';
@@ -225,23 +222,19 @@ function drawMazeDark(ctx) {
   const pad = 18;
   const cell = (size - pad*2) / GRID;
   
-  // 纯黑背景
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, size, size);
   
   ctx.save();
   ctx.translate(pad, pad);
   
-  // 仅绘制玩家光点（发光效果）
   const p = state.player;
   
-  // 外层光晕
   ctx.fillStyle = 'rgba(120, 183, 255, 0.3)';
   ctx.beginPath();
   ctx.arc(p.x * cell + cell / 2, p.y * cell + cell / 2, cell * 0.6, 0, Math.PI * 2);
   ctx.fill();
   
-  // 内层核心
   ctx.fillStyle = 'rgba(120, 183, 255, 0.9)';
   ctx.beginPath();
   ctx.arc(p.x * cell + cell / 2, p.y * cell + cell / 2, cell * 0.25, 0, Math.PI * 2);
@@ -256,46 +249,49 @@ function updateHUD() {
   const vis = state.visibility;
   const t = performance.now();
   
-  // 更新时间
   state.gameTime += t - state.lastTick;
   state.lastTick = t;
   
-  // 检查游戏结束（时间）
   if (state.gameTime >= MAX_TIME * 1000 && !state.won && !state.lost) {
     state.lost = true;
     updateStatus('TIME UP', 'danger');
   }
   
-  // 更新显示
-  document.getElementById('steps').textContent = p.steps;
-  document.getElementById('timeLeft').textContent = Math.max(0, Math.ceil((MAX_TIME * 1000 - state.gameTime) / 1000));
-
-  // stun display
-  const stunLeft = Math.max(0, state.stunnedUntil - t);
-  document.getElementById('stun').textContent = (stunLeft/1000).toFixed(1) + 's';
+  const timeLeftEl = document.getElementById('timeLeft');
+  if (timeLeftEl) timeLeftEl.textContent = Math.max(0, Math.ceil((MAX_TIME * 1000 - state.gameTime) / 1000));
   
-  // 视野状态
+  const stepsEl = document.getElementById('steps');
+  if (stepsEl) stepsEl.textContent = p.steps;
+  
+  const stunLeft = Math.max(0, state.stunnedUntil - t);
+  const stunEl = document.getElementById('stun');
+  if (stunEl) stunEl.textContent = (stunLeft/1000).toFixed(1) + 's';
+  
   const visMode = document.getElementById('visMode');
   const visBar = document.getElementById('visBar');
-  const timeLeft = vis.nextSwitchAt - t;
-  const pct = Math.max(0, Math.min(100, (timeLeft / (vis.mode === 'VISIBLE' ? VISIBILITY.VISIBLE : VISIBILITY.DARK)) * 100));
-  
-  if (vis.mode === 'VISIBLE') {
-    visMode.textContent = '光明期';
-    visMode.className = 'vis-mode visible';
-    visBar.style.background = 'linear-gradient(90deg, var(--accent), var(--info))';
-  } else {
-    visMode.textContent = '黑暗期';
-    visMode.className = 'vis-mode dark';
-    visBar.style.background = 'linear-gradient(90deg, var(--cta), var(--warn))';
+  if (visMode && visBar) {
+    const timeLeft = vis.nextSwitchAt - t;
+    const pct = Math.max(0, Math.min(100, (timeLeft / (vis.mode === 'VISIBLE' ? VISIBILITY.VISIBLE : VISIBILITY.DARK)) * 100));
+    
+    if (vis.mode === 'VISIBLE') {
+      visMode.textContent = '光明期';
+      visMode.className = 'vis-mode visible';
+      visBar.style.background = 'linear-gradient(90deg, var(--accent), var(--info))';
+    } else {
+      visMode.textContent = '黑暗期';
+      visMode.className = 'vis-mode dark';
+      visBar.style.background = 'linear-gradient(90deg, var(--cta), var(--warn))';
+    }
+    visBar.style.width = pct + '%';
   }
-  visBar.style.width = pct + '%';
 }
 
 function updateStatus(text, type) {
   const status = document.getElementById('runnerStatus');
-  status.textContent = text;
-  status.className = 'badge ' + type;
+  if (status) {
+    status.textContent = text;
+    status.className = 'badge ' + type;
+  }
 }
 
 // 游戏主循环
@@ -303,11 +299,11 @@ function gameLoop() {
   updateVisibility();
   updateHUD();
   
-  // 渲染
   const canvas = document.getElementById('gameCanvas');
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
   
-  if (state.visibility.mode === 'VISIBLE') {
+  if (state.visibility.mode === 'VISIBLE' || state.debugAssist) {
     drawMazeFull(ctx);
   } else {
     drawMazeDark(ctx);
@@ -316,39 +312,64 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-// 初始化
+// 启动游戏
 document.addEventListener('DOMContentLoaded', () => {
   initState();
   
-  // 键盘控制
+  // 键盘控制 - 修复：确保事件监听正常工作
   document.addEventListener('keydown', (e) => {
+    if (!state) return;
     if (state.won || state.lost) return;
     
-    const dir = dirFromKey(e.key);
-    if (dir) {
+    const key = e.key;
+    let moved = false;
+    
+    if (key === 'ArrowUp' || key === 'w' || key === 'W') {
       e.preventDefault();
-      tryMove(dir);
+      tryMove(N);
+      moved = true;
+    } else if (key === 'ArrowRight' || key === 'd' || key === 'D') {
+      e.preventDefault();
+      tryMove(E);
+      moved = true;
+    } else if (key === 'ArrowDown' || key === 's' || key === 'S') {
+      e.preventDefault();
+      tryMove(S);
+      moved = true;
+    } else if (key === 'ArrowLeft' || key === 'a' || key === 'A') {
+      e.preventDefault();
+      tryMove(W);
+      moved = true;
+    } else if (key === 'r' || key === 'R') {
+      initState();
     }
     
-    // R键重置
-    if (e.key === 'r' || e.key === 'R') {
-      initState();
+    // debug log
+    if (moved) {
+      console.log('Move attempted, player now at:', state.player.x, state.player.y);
     }
   });
   
-  // UI bindings
-  document.getElementById('btnNew').addEventListener('click', () => initState());
-  document.getElementById('btnReset').addEventListener('click', () => initState());
-
-  const chk = document.getElementById('chkAssist');
-  chk.checked = false;
-  chk.addEventListener('change', (e) => {
-    state.debugAssist = e.target.checked;
-  });
-
-  // initial status
+  // UI绑定
+  const btnNew = document.getElementById('btnNew');
+  const btnReset = document.getElementById('btnReset');
+  const chkAssist = document.getElementById('chkAssist');
+  
+  if (btnNew) btnNew.addEventListener('click', () => initState());
+  if (btnReset) btnReset.addEventListener('click', () => initState());
+  
+  if (chkAssist) {
+    chkAssist.checked = false;
+    chkAssist.addEventListener('change', (e) => {
+      if (state) state.debugAssist = e.target.checked;
+    });
+  }
+  
+  // 初始状态
   updateStatus('READY', 'neutral');
-
-  // start loop
+  
+  // 启动游戏循环
   gameLoop();
+  
+  console.log('Game initialized! Use WASD or Arrow keys to move.');
 });
