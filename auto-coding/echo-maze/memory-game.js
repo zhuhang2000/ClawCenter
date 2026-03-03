@@ -145,6 +145,7 @@ function updateVisibility() {
   if (state.debugAssist) {
     vis.mode = 'VISIBLE';
     vis.nextSwitchAt = t + VISIBILITY.VISIBLE;
+    updateCanvasWrapClass();
     return;
   }
   
@@ -156,6 +157,21 @@ function updateVisibility() {
       vis.mode = 'VISIBLE';
       vis.nextSwitchAt = t + VISIBILITY.VISIBLE;
     }
+  }
+
+  updateCanvasWrapClass();
+}
+
+// 背景：根据光明/黑暗模式切换 canvasWrap 的 class
+function updateCanvasWrapClass() {
+  const wrap = document.querySelector('.canvasWrap');
+  if (!wrap) return;
+
+  wrap.classList.remove('light-mode', 'dark-mode');
+  if (state.visibility.mode === 'VISIBLE' || state.debugAssist) {
+    wrap.classList.add('light-mode');
+  } else {
+    wrap.classList.add('dark-mode');
   }
 }
 
